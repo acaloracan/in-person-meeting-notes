@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type MeetingNote = {
   id: string;
@@ -31,6 +31,8 @@ export default function Meetings() {
   const onRefresh = useCallback(async () => {
     refetch();
   }, [refetch]);
+
+  const { top } = useSafeAreaInsets();
 
   const renderItem = ({ item }: { item: MeetingNote }) => {
     const title =
@@ -66,27 +68,26 @@ export default function Meetings() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          ListEmptyComponent={() => (
-            <View style={styles.center}>
-              <Text style={styles.meta}>No meetings yet.</Text>
-            </View>
-          )}
-          contentContainerStyle={
-            items?.length === 0 ? styles.flexGrow : undefined
-          }
-        />
-      </View>
-    </SafeAreaView>
+    <View style={[styles.container, { paddingTop: top }]}>
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={() => (
+          <View style={styles.center}>
+            <Text style={styles.meta}>No meetings yet.</Text>
+          </View>
+        )}
+        contentContainerStyle={
+          items?.length === 0 ? styles.flexGrow : undefined
+        }
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     backgroundColor: "#ecf0f1",
-    padding: 10,
+    paddingHorizontal: 10,
   },
   center: {
     flex: 1,
