@@ -6,10 +6,18 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "inpersonmeetingnotes",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ],
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone."
+      },
+      "bundleIdentifier": "com.anonymous.inpersonmeetingnotes"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +27,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.inpersonmeetingnotes",
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "output": "static",
@@ -33,16 +43,37 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      [
+        "./plugins/google-services.config.js",
+        {
+          "source": "./android/app/google-services.json",
+          "dest": "android/app/google-services.json"
+        }
+      ],
+      [
+        "./plugins/audio-recording.config.js",
+        {
+          "iosMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone.",
+          "androidChannelId": "recording",
+          "androidChannelName": "Recording",
+          "androidChannelDescription": "Foreground service for microphone recording"
+        }
+      ],
+      "expo-sqlite",
+      "expo-asset"
     ],
+    "extra": {
+      "eas": {
+        "projectId": "27c6def9-7f01-4fc3-addb-01368048e0c5"
+      }
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "kyuseishus-organization"
   }
 }

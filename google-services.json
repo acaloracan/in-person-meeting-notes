@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "116583229998",
+    "project_id": "meetingnotes-d435d",
+    "storage_bucket": "meetingnotes-d435d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:116583229998:android:b2f5bf8cf517bd46ca0dbf",
+        "android_client_info": {
+          "package_name": "com.anonymous.inpersonmeetingnotes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-TIor1f6r8lO6Sve_4sSkT_vj6EkdwGs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
