@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type MeetingItem = {
   id: string;
@@ -20,6 +21,8 @@ export default function Meeting() {
   const params = useLocalSearchParams<{ id?: string }>();
   const meetingId = (params?.id ?? "").toString();
   const navigation = useNavigation();
+
+  const { bottom } = useSafeAreaInsets();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -97,7 +100,9 @@ export default function Meeting() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={[styles.container, { paddingBottom: bottom + 16 }]}
+    >
       <Text style={styles.title}>Meeting {meeting.id}</Text>
       {meeting.created_at ? (
         <Text style={styles.muted}>
@@ -124,10 +129,10 @@ export default function Meeting() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    // justifyContent: "center",
+    flexGrow: 1,
     backgroundColor: "#ecf0f1",
-    padding: 10,
+    paddingTop: 16,
+    paddingHorizontal: 16,
   },
   centered: {
     flex: 1,
