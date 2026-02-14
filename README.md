@@ -33,7 +33,7 @@ export SUPABASE_KEY="YOUR_SERVICE_ROLE_KEY"
 # Optional: OpenAI API key for real transcription/summary
 export OPENAI_API_KEY="sk-..."
 
-uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.app:app --reload --host <your-ip-address> --port 8000
 ```
 
 - For iOS simulator/web: set `EXPO_PUBLIC_BACKEND_URL` to `http://localhost:8000`.
