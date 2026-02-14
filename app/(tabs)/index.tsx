@@ -1,98 +1,129 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { uploadRecordingToSupabase } from "@/utils/uploadRecordingToSupabase";
+import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
+import React, { useEffect } from "react";
+import { Alert, Button, StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [elapsedMs, setElapsedMs] = React.useState(0);
+  const startAtRef = React.useRef<number | null>(null);
+
+  const record = async () => {
+    await audioRecorder.prepareToRecordAsync();
+    startAtRef.current = Date.now();
+    setElapsedMs(0);
+    audioRecorder.record();
+  };
+
+  const stopRecording = async () => {
+    await audioRecorder.stop();
+    startAtRef.current = null;
+    setElapsedMs(0);
+    if (audioRecorder.uri) {
+      await uploadRecordingToSupabase(audioRecorder.uri);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        Alert.alert("Permission to access microphone was denied");
+      }
+
+      setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: true,
+      });
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (recorderState.isRecording) {
+      if (!startAtRef.current) startAtRef.current = Date.now();
+      const id = setInterval(() => {
+        const start = startAtRef.current ?? Date.now();
+        setElapsedMs(Date.now() - start);
+      }, 200);
+      return () => clearInterval(id);
+    } else {
+      startAtRef.current = null;
+      setElapsedMs(0);
+    }
+  }, [recorderState.isRecording]);
+
+  const formatTime = (ms: number) => {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const mm = String(Math.floor(total / 60)).padStart(2, "0");
+    const ss = String(total % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.timerRow}>
+        <View
+          style={[styles.dot, recorderState.isRecording && styles.dotActive]}
+        />
+        <Text style={styles.timerText}>{formatTime(elapsedMs)}</Text>
+      </View>
+      <Text style={styles.statusText}>
+        {recorderState.isRecording ? "Recording…" : "Ready to record"}
+      </Text>
+      <View style={styles.buttons}>
+        <Button
+          title={
+            recorderState.isRecording ? "Stop Recording" : "Start Recording"
+          }
+          onPress={recorderState.isRecording ? stopRecording : record}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#ecf0f1",
+    padding: 16,
   },
-  stepContainer: {
-    gap: 8,
+  timerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#9ca3af",
+    marginRight: 8,
+  },
+  dotActive: {
+    backgroundColor: "#ef4444",
+  },
+  timerText: {
+    fontSize: 32,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+  statusText: {
+    textAlign: "center",
+    color: "#6b7280",
+    marginBottom: 16,
+  },
+  buttons: {
+    paddingHorizontal: 32,
   },
 });
